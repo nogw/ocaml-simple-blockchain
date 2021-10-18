@@ -1,0 +1,4 @@
+(library
+ (name chain)
+ (libraries sha dream yojson)
+ (preprocess (staged_pps ppx_import ppx_yojson_conv)))

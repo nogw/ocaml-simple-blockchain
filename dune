@@ -1,4 +1,0 @@
-(executable
- (name blockchain)
- (libraries sha yojson)
- (preprocess (staged_pps ppx_import ppx_yojson_conv)))
