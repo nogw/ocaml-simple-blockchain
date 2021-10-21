@@ -1,13 +1,13 @@
 open Blockchain
+
 type message = 
   | QueryAll
   | ResponseBlockchain of string
   [@@deriving yojson]
-
-type websocket = [%import: Dream.websocket]
-
+  
 type peer = {
-  socket: websocket;
+  id: Uuidm.t;
+  socket: Dream.websocket;
   time: float
 }
 
@@ -59,8 +59,9 @@ let init_message_handle store peer =
           Lwt.return_unit
       end
   | None -> 
-      store.peers <- List.filter ( fun { socket: _; time } -> 
+      store.peers <- List.filter ( fun { id: _; socket: _; time } -> 
         ignore socket;
+        ignore id;
         time <> peer.time   
       ) store.peers;
       Dream.close_websocket peer.socket
@@ -72,8 +73,20 @@ let init_p2p_server store peer =
 
 let init_ws_server store  =
   Dream.websocket ( 
-    fun wbs -> init_p2p_server store { socket = wbs; time = Unix.time () } 
+    fun wbs -> 
+      let state = Random.State.make_self_init () in 
+      let peer = { id = Uuidm.v4_gen state () ; socket = wbs; time = Unix.time () } in
+      init_p2p_server store peer
   )
+
+let get_peers store =
+  List.iter (
+    fun peer -> peer.id 
+    |> Uuidm.to_string 
+    |> Yojson.Safe.from_string
+    |> Yojson.Safe.to_string
+    |> Dream.json
+  ) store.peers
 
 let init_server store port =
   Dream.run ~port
@@ -102,12 +115,10 @@ let init_server store port =
     there's no way to identify each socket, I thought I'd add a unique 
     id for each one, but that's bad, switching libraries 
     (framework, whatever) just for that is boring
-    
+    *)
     Dream.get "/peers" (
-      fun _ -> 
-      store.peers
-      |> List.map (fun x -> yojson_of_peer x) 
-    ); *)
+      fun _ -> get_peers store
+    );
 
     Dream.get "/addPeer" (
       fun _ -> init_ws_server store
