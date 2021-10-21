@@ -3,26 +3,26 @@ type timestamp = [%import: Unix.tm] [@@deriving yojson]
 type block = 
   | GenesisBlock of {
       index: int;
+      hash: string;  
       data: string;
       timestamp: timestamp;
-      hash: string;  
     }
   | Block of { 
       index: int;
+      hash: string;
       data: string;
       timestamp: timestamp;
       previous_block: block;
-      hash: string;
     }
   [@@deriving yojson]
 
 let block index data timestamp previous_hash hash = 
   Block {
     index = index;
+    hash = hash;
     data = data;
     timestamp = timestamp;
     previous_block = previous_hash;
-    hash = hash;
   }
 
 let index_of block =
@@ -75,10 +75,10 @@ let add_next_block data previous =
   and index = index_of (previous) + 1 in
   Block {
     index = index;
+    hash = hash_block index data ~previous_hash: (hash_of previous) timestamp;
     data = data;
     timestamp = timestamp;
     previous_block = previous;
-    hash = hash_block index data ~previous_hash: (hash_of previous) timestamp;
   }
 
 let validate_new_block block =

@@ -1,12 +1,13 @@
 open Blockchain
-
 type message = 
   | QueryAll
   | ResponseBlockchain of string
   [@@deriving yojson]
 
+type websocket = [%import: Dream.websocket]
+
 type peer = {
-  socket: Dream.websocket;
+  socket: websocket;
   time: float
 }
 
@@ -27,8 +28,7 @@ let write peer message =
   |> Yojson.Safe.to_string
   |> Dream.send peer.socket
 
-let broadcast peers message =
-  List.iter (fun peer -> write peer message |> ignore) peers
+let broadcast peers message = List.iter (fun peer -> write peer message |> ignore) peers
 
 let blockchain_response store received = 
   if index_of store.chain > index_of received then
@@ -97,13 +97,17 @@ let init_server store port =
       |> Dream.json
     );
 
+    (* 
+    websocket type is empty, it makes it difficult to list all sockets, 
+    there's no way to identify each socket, I thought I'd add a unique 
+    id for each one, but that's bad, switching libraries 
+    (framework, whatever) just for that is boring
+    
     Dream.get "/peers" (
       fun _ -> 
-      store.chain
-      |> yojson_of_block
-      |> Yojson.Safe.to_string
-      |> Dream.json   
-    );
+      store.peers
+      |> List.map (fun x -> yojson_of_peer x) 
+    ); *)
 
     Dream.get "/addPeer" (
       fun _ -> init_ws_server store
