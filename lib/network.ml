@@ -5,11 +5,12 @@ type message =
   | ResponseBlockchain of string
   [@@deriving yojson]
 
-type uuid = string [@@deriving yojson]
-type uuids = uuid list [@@deriving yojson]
+type uuid' = string [@@deriving yojson]
+
+type uuids = uuid' list [@@deriving yojson]
 
 type peer = {
-  id: uuid;
+  id: uuid';
   socket: Dream.websocket;
   time: float
 }
