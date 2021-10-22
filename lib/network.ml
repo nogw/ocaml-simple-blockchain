@@ -63,10 +63,8 @@ let init_message_handle store peer =
           Lwt.return_unit
       end
   | None -> 
-      store.peers <- List.filter ( fun { id: _; socket: _; time } -> 
-        ignore socket;
-        ignore id;
-        time <> peer.time   
+      store.peers <- List.filter ( 
+        fun connection -> connection.time <> peer.time 
       ) store.peers;
       Dream.close_websocket peer.socket
 
