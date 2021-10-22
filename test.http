@@ -3,4 +3,6 @@
 # POST http://localhost:4000/mineBlock HTTP/1.1
 # test X1 
 
-GET http://localhost:4000/peers
+# GET http://localhost:4000/peers
+
+# GET ws://localhost:4000/addPeer

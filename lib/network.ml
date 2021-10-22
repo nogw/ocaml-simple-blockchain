@@ -4,9 +4,12 @@ type message =
   | QueryAll
   | ResponseBlockchain of string
   [@@deriving yojson]
-  
+
+type uuid = string [@@deriving yojson]
+type uuids = uuid list [@@deriving yojson]
+
 type peer = {
-  id: Uuidm.t;
+  id: uuid;
   socket: Dream.websocket;
   time: float
 }
@@ -75,23 +78,22 @@ let init_ws_server store  =
   Dream.websocket ( 
     fun wbs -> 
       let state = Random.State.make_self_init () in 
-      let peer = { id = Uuidm.v4_gen state () ; socket = wbs; time = Unix.time () } in
+      let peer = { 
+        id = Uuidm.v4_gen state () |> Uuidm.to_string ; 
+        socket = wbs ; 
+        time = Unix.time () 
+      } in
       init_p2p_server store peer
   )
-
-let get_peers store =
-  List.iter (
-    fun peer -> peer.id 
-    |> Uuidm.to_string 
-    |> Yojson.Safe.from_string
-    |> Yojson.Safe.to_string
-    |> Dream.json
-  ) store.peers
 
 let init_server store port =
   Dream.run ~port
   @@ Dream.logger
   @@ Dream.router [
+    Dream.get "/" (
+      fun _ -> Dream.html "hello world"
+    );
+
     Dream.get "/blocks" (
       fun _ -> 
       store.chain
@@ -111,13 +113,20 @@ let init_server store port =
     );
 
     (* 
-    websocket type is empty, it makes it difficult to list all sockets, 
-    there's no way to identify each socket, I thought I'd add a unique 
-    id for each one, but that's bad, switching libraries 
-    (framework, whatever) just for that is boring
+      websocket type is empty, it makes it difficult to list all sockets, 
+      there's no way to identify each socket, I thought I'd add a unique 
+      id for each one, but that's bad, switching libraries 
+      (framework, whatever) just for that is boring, i chose to use a uuid
+      for each socket, it works, maybe not ideal, but it works ;D 
     *)
+
     Dream.get "/peers" (
-      fun _ -> get_peers store
+      fun _ ->
+        store.peers
+        |> List.map ( fun peer -> peer.id )
+        |> yojson_of_uuids
+        |> Yojson.Safe.to_string
+        |> Dream.json
     );
 
     Dream.get "/addPeer" (

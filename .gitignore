@@ -1,1 +1,5 @@
 _build
+.ocamlinit
+.vscode
+dune-project
+test.http
