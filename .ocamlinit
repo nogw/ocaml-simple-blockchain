@@ -1,6 +1,0 @@
-#directory "lib";;
-#require "ppx_import";; 
-#require "ppx_yojson_conv";;
-#require "sha";;
-#directory "bin";;
-#use "main.ml";;
