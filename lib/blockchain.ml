@@ -1,24 +1,39 @@
 type timestamp = [%import: Unix.tm] [@@deriving yojson]
 
 type block =
-  | GenesisBlock of
-      {index: int; hash: string; data: string; timestamp: timestamp}
-  | Block of
-      { index: int
-      ; hash: string
-      ; data: string
-      ; timestamp: timestamp
-      ; previous_block: block }
-[@@deriving yojson]
+  | GenesisBlock of {
+    index: int; 
+    hash: string; 
+    data: string; 
+    timestamp: timestamp
+  }
+  | Block of { 
+    index: int; 
+    hash: string; 
+    data: string; 
+    timestamp: timestamp; 
+    previous_block: block 
+  }
+  [@@deriving yojson]
 
 let block index data timestamp previous_hash hash =
-  Block {index; hash; data; timestamp; previous_block= previous_hash}
+  Block {
+    index; 
+    hash; 
+    data; 
+    timestamp; 
+    previous_block = previous_hash
+  }
 
 let index_of block =
-  match block with GenesisBlock b -> b.index | Block b -> b.index
+  match block with 
+  | GenesisBlock b -> b.index 
+  | Block b -> b.index
 
 let data_of block =
-  match block with GenesisBlock b -> b.data | Block b -> b.data
+  match block with 
+  | GenesisBlock b -> b.data 
+  | Block b -> b.data
 
 let timestamp_of block =
   match block with GenesisBlock b -> b.timestamp | Block b -> b.timestamp
@@ -33,25 +48,31 @@ let previous_block_of block =
   | Block b -> b.previous_block
 
 let hash_block index data ?(previous_hash = "") timestamp =
-  [ string_of_int index
-  ; previous_hash
-  ; Unix.mktime timestamp |> fst |> string_of_float
-  ; data ]
+  [ string_of_int index; 
+    previous_hash; 
+    Unix.mktime timestamp |> fst |> string_of_float; 
+    data ]
   |> String.concat "" |> Sha256.string |> Sha256.to_hex
 
 let initial_block data =
   let timestamp = Unix.time () |> Unix.gmtime in
-  GenesisBlock {index= 0; data; timestamp; hash= hash_block 0 data timestamp}
+  GenesisBlock {
+    index = 0; 
+    data; 
+    timestamp; 
+    hash = hash_block 0 data timestamp
+  }
 
 let add_next_block data previous =
   let timestamp = Unix.time () |> Unix.gmtime
   and index = index_of previous + 1 in
-  Block
-    { index
-    ; hash= hash_block index data ~previous_hash:(hash_of previous) timestamp
-    ; data
-    ; timestamp
-    ; previous_block= previous }
+  Block { 
+    index; 
+    hash= hash_block index data ~previous_hash:(hash_of previous) timestamp; 
+    data; 
+    timestamp; 
+    previous_block= previous 
+  }
 
 let validate_new_block block =
   match block with
