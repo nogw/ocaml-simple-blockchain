@@ -7,8 +7,6 @@ type message =
 
 type uuid = string [@@deriving yojson]
 
-type uuids = uuid list [@@deriving yojson]
-
 type peer = {
   id: uuid;
   socket: Dream.websocket;
@@ -123,7 +121,7 @@ let init_server store port =
       fun _ ->
         store.peers
         |> List.map ( fun peer -> peer.id )
-        |> yojson_of_uuids
+        |> [%yojson_of: uuid list]
         |> Yojson.Safe.to_string
         |> Dream.json
     );
